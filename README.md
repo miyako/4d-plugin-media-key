@@ -33,7 +33,7 @@ The ``scope`` parameter is experimental. See source code for implementation.
 
 Parameter|Type|Description
 ------------|------------|----
-keycode|LONGINT|Mac keycode 
+keycode|LONGINT|Mac keycode or Windows virtual keycode if not mapped
 context|TEXT|text passed to ``ON MEDIA KEY CALL``
 
 ### List of supported keycodes
