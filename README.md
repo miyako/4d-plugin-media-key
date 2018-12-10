@@ -18,7 +18,7 @@ __Mac version is 64-bit only!__
 ## Syntax
 
 ```
-ON MEDIA KEY CALL (method;context{;scope})```
+ON MEDIA KEY CALL (method;context{;scope})
 ```
 
 Parameter|Type|Description
@@ -26,3 +26,10 @@ Parameter|Type|Description
 method|TEXT|project method
 context|TEXT|any text
 scope|LONGINT|``KEYEVENT_LOCAL`` or ``KEYEVENT_GLOBAL``
+
+* Signature of callback method
+
+Parameter|Type|Description
+------------|------------|----
+keycode|LONGINT|Mac keycode 
+context|TEXT|text passed to ``ON MEDIA KEY CALL``
