@@ -19,6 +19,7 @@ __Mac version is 64-bit only!__
 
 ```
 ON MEDIA KEY CALL (method;context{;scope})```
+```
 
 Parameter|Type|Description
 ------------|------------|----
