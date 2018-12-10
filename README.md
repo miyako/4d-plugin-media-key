@@ -27,6 +27,8 @@ method|TEXT|project method
 context|TEXT|any text
 scope|LONGINT|``KEYEVENT_LOCAL`` or ``KEYEVENT_GLOBAL``
 
+The ``scope`` parameter is experimental. See source code for implementation.
+
 ### Signature of callback method
 
 Parameter|Type|Description
