@@ -27,9 +27,15 @@ method|TEXT|project method
 context|TEXT|any text
 scope|LONGINT|``KEYEVENT_LOCAL`` or ``KEYEVENT_GLOBAL``
 
-* Signature of callback method
+### Signature of callback method
 
 Parameter|Type|Description
 ------------|------------|----
 keycode|LONGINT|Mac keycode 
 context|TEXT|text passed to ``ON MEDIA KEY CALL``
+
+### List of supported keycodes
+
+Mac|Windows
+------------|------------
+KEYTYPE_PLAY|
