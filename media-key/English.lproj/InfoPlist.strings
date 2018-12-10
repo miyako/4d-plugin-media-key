@@ -1,0 +1,5 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "Media Key";
+CFBundleShortVersionString = "1.0";
+CFBundleGetInfoString = "Media Key version 1.0, Copyright 2018 miyako.";
