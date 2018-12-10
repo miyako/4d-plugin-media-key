@@ -38,7 +38,6 @@ context|TEXT|text passed to ``ON MEDIA KEY CALL``
 
 Mac key code|mapped Windows virtual key code
 ------------|------------
-KEYTYPE_PLAY|
 KEYTYPE_BRIGHTNESS_DOWN|
 KEYTYPE_BRIGHTNESS_UP|
 KEYTYPE_CAPS_LOCK|VK_CAPITAL,VK_OEM_ATTN
