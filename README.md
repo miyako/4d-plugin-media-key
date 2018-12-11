@@ -32,15 +32,13 @@ On Windows:
  
 ``KEYEVENT_GLOBAL`` will call ``SetWindowsHookEx`` with ``WH_KEYBOARD_LL``.  
 
-Either way, the hook will always return ``CallNextHookEx``, which means the event is not consumed.
-
 On Mac:  
 
 ``KEYEVENT_LOCAL`` will call ``- addLocalMonitorForEventsMatchingMask:``.
 
 ``KEYEVENT_GLOBAL`` will call ``- addGlobalMonitorForEventsMatchingMask``.
 
-Either way, you cannot modify or otherwise prevent the event from being delivered to its original target application.
+Either way, __you cannot modify or otherwise prevent the event from being delivered to its original target application__.
 
 See source code for implementation.
 
