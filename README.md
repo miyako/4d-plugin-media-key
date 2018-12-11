@@ -13,6 +13,10 @@ __Mac version is 64-bit only!__
 
 <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
 
+### Releases
+
+[1.1](https://github.com/miyako/4d-plugin-media-key/releases/tag/1.1)
+
 ## Syntax
 
 ```
