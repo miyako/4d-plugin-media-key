@@ -192,7 +192,6 @@ static OSStatus onEventCall(EventHandlerCallRef inCaller, EventRef inEvent, void
                 case kVK_CapsLock:
                     break;
             }
-                /* handle event */
                 break;
         }
             break;
@@ -209,19 +208,6 @@ LRESULT CALLBACK onEventCall(int code, WPARAM wParam, LPARAM lParam)
         MSG* pMsg = (MSG*)lParam;
         if (pMsg->message == WM_KEYDOWN)
         {
-            /*
-             UINT keyCode = pMsg->wParam;
-             BYTE keyboard[256];
-             if (GetKeyboardState(keyboard))
-             {
-             WCHAR buf[5] = {};
-             if (1 == ToUnicode(keycode, MapVirtualKey(keyCode, MAPVK_VK_TO_VSC), keyboard, buf, 4, 0))
-             {
-             
-             }
-             
-             }
-             */
             int keyCode = 0;
             switch (pMsg->wParam)
             {
@@ -231,8 +217,6 @@ LRESULT CALLBACK onEventCall(int code, WPARAM wParam, LPARAM lParam)
                 case VK_VOLUME_DOWN:
 					keyCode = NX_KEYTYPE_SOUND_DOWN;
                     break;
-//                case NX_KEYTYPE_BRIGHTNESS_UP:
-//                case NX_KEYTYPE_BRIGHTNESS_DOWN:
 				case VK_CAPITAL:
 				case VK_OEM_ATTN: /* VMWare Fusion */
 					keyCode = NX_KEYTYPE_CAPS_LOCK;
@@ -246,16 +230,9 @@ LRESULT CALLBACK onEventCall(int code, WPARAM wParam, LPARAM lParam)
                 case VK_VOLUME_MUTE:
 					keyCode = NX_KEYTYPE_MUTE;
                     break;
-//                case VK_PRIOR:
-//                case VK_NEXT:
                 case VK_NUMLOCK:
 					keyCode = NX_KEYTYPE_NUM_LOCK;
                     break;
-//                case NX_KEYTYPE_CONTRAST_UP:
-//                case NX_KEYTYPE_CONTRAST_DOWN:
-//                case NX_KEYTYPE_LAUNCH_PANEL:
-//                case NX_KEYTYPE_EJECT:
-//                case NX_KEYTYPE_VIDMIRROR:
                 case VK_MEDIA_PLAY_PAUSE:
 					keyCode = NX_KEYTYPE_PLAY;
                     break;
@@ -265,14 +242,107 @@ LRESULT CALLBACK onEventCall(int code, WPARAM wParam, LPARAM lParam)
                 case VK_MEDIA_PREV_TRACK:
 					keyCode = NX_KEYTYPE_PREVIOUS;
                     break;
-//                case NX_KEYTYPE_FAST:
-//                case NX_KEYTYPE_REWIND:
-//                case NX_KEYTYPE_ILLUMINATION_UP:
-//                case NX_KEYTYPE_ILLUMINATION_DOWN:
-//                case NX_KEYTYPE_ILLUMINATION_TOGGLE:
+                /* windows specific keys */
+ //               case VK_ABNT_C1:
+ //               case VK_ABNT_C2:
+                case VK_ACCEPT:
+                case VK_APPS:
+                case VK_ATTN:
+                case VK_BROWSER_BACK:
+                case VK_BROWSER_FAVORITES:
+                case VK_BROWSER_FORWARD:
+                case VK_BROWSER_HOME:
+                case VK_BROWSER_REFRESH:
+                case VK_BROWSER_SEARCH:
+                case VK_BROWSER_STOP:
+                case VK_CANCEL:
+                case VK_CLEAR:
+                case VK_CONVERT:
+                case VK_CRSEL:
+                case VK_EREOF:
+                case VK_EXECUTE:
+                case VK_EXSEL:
+                case VK_F16:
+                case VK_F17:
+                case VK_F18:
+                case VK_F19:
+                case VK_F20:
+                case VK_F21:
+                case VK_F22:
+                case VK_F23:
+                case VK_F24:
+                case VK_FINAL:
+                case VK_ICO_00:
+                case VK_ICO_CLEAR:
+                case VK_ICO_HELP:
+                case VK_INSERT:
+                case VK_JUNJA:
+                case VK_KANA:
+                case VK_KANJI:
+                case VK_LAUNCH_APP1:
+                case VK_LAUNCH_APP2:
+                case VK_LAUNCH_MAIL:
+                case VK_LAUNCH_MEDIA_SELECT:
+                case VK_LCONTROL:
+                case VK_LMENU:
+                case VK_LSHIFT:
+                case VK_LWIN:
+                case VK_MEDIA_STOP:
+                case VK_MODECHANGE:
+                case VK_NONCONVERT:
+                case VK_OEM_FJ_JISHO:
+                case VK_NONAME:
+                case VK_OEM_1:
+                case VK_OEM_102:
+                case VK_OEM_2:
+                case VK_OEM_3:
+                case VK_OEM_4:
+                case VK_OEM_5:
+                case VK_OEM_6:
+                case VK_OEM_7:
+                case VK_OEM_8:
+                case VK_OEM_AUTO:
+                case VK_OEM_AX:
+                case VK_OEM_BACKTAB:
+                case VK_OEM_CLEAR:
+                case VK_OEM_COMMA:
+                case VK_OEM_COPY:
+                case VK_OEM_CUSEL:
+                case VK_OEM_ENLW:
+                case VK_OEM_FINISH:
+                case VK_OEM_FJ_LOYA:
+                case VK_OEM_FJ_MASSHOU:
+                case VK_OEM_FJ_ROYA:
+                case VK_OEM_FJ_TOUROKU:
+                case VK_OEM_JUMP:
+                case VK_OEM_MINUS:
+                case VK_OEM_PA1:
+                case VK_OEM_PA2:
+                case VK_OEM_PA3:
+                case VK_OEM_PERIOD:
+                case VK_OEM_PLUS:
+                case VK_OEM_RESET:
+                case VK_OEM_WSCTRL:
+                case VK_PA1:
+                case VK_PACKET:
+                case VK_PAUSE:
+                case VK_PLAY:
+                case VK_PROCESSKEY:
+                case VK_PRINT:
+                case VK_RCONTROL:
+                case VK_RMENU:
+                case VK_RSHIFT:
+                case VK_RWIN:
+                case VK_SCROLL:
+                case VK_SELECT:
+                case VK_SEPARATOR:
+                case VK_SNAPSHOT:
+                case VK_ZOOM:
+                    keyCode = (int)pMsg->wParam;
+                    break;
 				default:
-					keyCode = (int)pMsg->wParam;
-						break;
+
+                    break;
             }
 			if (keyCode != 0)
 			{

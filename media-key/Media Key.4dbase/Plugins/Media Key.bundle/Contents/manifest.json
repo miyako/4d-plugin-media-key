@@ -5,7 +5,7 @@
 		{
 			"theme": "Media Key",
 			"syntax": "ON MEDIA KEY CALL(&T;&T;&L)",
-			"threadSafe": true
+			"threadSafe": false
 		}
 	]
 }
