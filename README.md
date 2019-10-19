@@ -13,6 +13,10 @@ __Mac version is 64-bit only!__
 
 <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
 
+### Releases
+
+[1.1](https://github.com/miyako/4d-plugin-media-key/releases/tag/1.1)
+
 ## Syntax
 
 ```
@@ -25,7 +29,22 @@ method|TEXT|project method
 context|TEXT|any text
 scope|LONGINT|``KEYEVENT_LOCAL`` or ``KEYEVENT_GLOBAL``
 
-The ``scope`` parameter is experimental. See source code for implementation.
+The ``scope`` parameter is experimental. 
+
+On Windows:  
+``KEYEVENT_LOCAL`` will call ``SetWindowsHookEx`` with ``WH_GETMESSAGE`` which limits the event hook to the current thread.
+ 
+``KEYEVENT_GLOBAL`` will call ``SetWindowsHookEx`` with ``WH_KEYBOARD_LL``.  
+
+On Mac:  
+
+``KEYEVENT_LOCAL`` will call ``- addLocalMonitorForEventsMatchingMask:``.
+
+``KEYEVENT_GLOBAL`` will call ``- addGlobalMonitorForEventsMatchingMask``.
+
+Either way, __you cannot modify or otherwise prevent the event from being delivered to its original target application__.
+
+See source code for implementation.
 
 ### Signature of callback method
 
