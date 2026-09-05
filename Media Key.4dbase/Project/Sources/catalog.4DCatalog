@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE base SYSTEM "http://www.4d.com/dtd/2007/base.dtd" >
+<base name="Media Key" uuid="30F20A15D5558348BD9812A1C6C8C23A" collation_locale="fr">
+	<schema name="DEFAULT_SCHEMA"/>
+	<base_extra data_file_path=":Media Key.4DD" package_name="Media Key" structure_file_name="Media Key" __stringCompHash="icu:77.1.0" __keywordBuildingHash="icu:77.1.0"/>
+</base>

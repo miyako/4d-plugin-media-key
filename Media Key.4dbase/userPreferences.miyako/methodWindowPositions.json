@@ -1,0 +1,26 @@
+{
+	"Trash/Methods/(Method1).4dm": {
+		"left": 44,
+		"top": 476,
+		"width": 913,
+		"height": 416
+	},
+	"Sources/Methods/TEST.4dm": {
+		"left": 335,
+		"top": 385,
+		"width": 931,
+		"height": 691
+	},
+	"Sources/Methods/EVENT.4dm": {
+		"left": 111,
+		"top": 152,
+		"width": 931,
+		"height": 477
+	},
+	"Sources/Forms/TEST/method.4dm": {
+		"left": 651,
+		"top": 152,
+		"width": 913,
+		"height": 416
+	}
+}
