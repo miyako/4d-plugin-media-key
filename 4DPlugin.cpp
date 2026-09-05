@@ -72,8 +72,9 @@ void generateUuid(C_TEXT &returnValue)
 		if (UuidToString(&uuid, &str) == RPC_S_OK) {
 			size_t len = wcslen((const wchar_t *)str);
 
-			std::vector<wchar_t>buf(len);
+			std::vector<wchar_t>buf(len + 1);
 			memcpy(&buf[0], str, len * sizeof(wchar_t));
+			buf[len] = L'\0';
 			_wcsupr((wchar_t *)&buf[0]);
 
 			returnValue.setUTF16String((const PA_Unichar *)&buf[0], len);
@@ -362,10 +363,19 @@ LRESULT CALLBACK onEventCall(int code, WPARAM wParam, LPARAM lParam)
 
 void listenerLoopBegin()
 {
+    media_key_scope_t watchScope;
+
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex2);
+
+        watchScope = MK::WATCH_SCOPE;
+    }
+
 #if VERSIONMAC
 #if USE_NSEVENT
     /* cocoa */
-    if(MK::WATCH_SCOPE == media_key_scope_local)
+    if(watchScope == media_key_scope_local)
     {
         eventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSSystemDefinedMask
                                                              handler:^(NSEvent *event)
@@ -490,7 +500,7 @@ void listenerLoopBegin()
 #endif
 #else
     /* windows */
-    if(MK::WATCH_SCOPE == media_key_scope_local)
+    if(watchScope == media_key_scope_local)
     {
         eventMonitor = SetWindowsHookEx(WH_GETMESSAGE,  (HOOKPROC)onEventCall, 0, GetCurrentThreadId());
     }else
@@ -541,16 +551,16 @@ void listenerLoop()
     {
 //        PA_YieldAbsolute();
         
-        bool PROCESS_SHOULD_RESUME;
-        bool PROCESS_SHOULD_TERMINATE;
+        bool shouldResumeLocal;
+        bool shouldTerminateLocal;
         
         if(1)
         {
-            PROCESS_SHOULD_RESUME = MK::PROCESS_SHOULD_RESUME;
-            PROCESS_SHOULD_TERMINATE = MK::PROCESS_SHOULD_TERMINATE;
+            shouldResumeLocal = MK::PROCESS_SHOULD_RESUME;
+            shouldTerminateLocal = MK::PROCESS_SHOULD_TERMINATE;
         }
         
-        if(PROCESS_SHOULD_RESUME)
+        if(shouldResumeLocal)
         {
             size_t count_media_keys;
             
@@ -577,7 +587,7 @@ void listenerLoop()
                     listenerLoopExecuteMethod();
                 }
                 
-                if(PROCESS_SHOULD_TERMINATE)
+                if(shouldTerminateLocal)
                     break;
                 
                 if(1)
@@ -585,7 +595,7 @@ void listenerLoop()
                     std::lock_guard<std::mutex> lock(globalMutex);
                     
                     count_media_keys = MK::MEDIA_KEY_CODES.size();
-                    PROCESS_SHOULD_TERMINATE = MK::PROCESS_SHOULD_TERMINATE;
+                    shouldTerminateLocal = MK::PROCESS_SHOULD_TERMINATE;
                 }
             }
             
@@ -607,10 +617,10 @@ void listenerLoop()
         
         if(1)
         {
-            PROCESS_SHOULD_TERMINATE = MK::PROCESS_SHOULD_TERMINATE;
+            shouldTerminateLocal = MK::PROCESS_SHOULD_TERMINATE;
         }
         
-        if(PROCESS_SHOULD_TERMINATE)
+        if(shouldTerminateLocal)
             break;
         
     }
@@ -640,19 +650,28 @@ void listenerLoop()
 
 void listenerLoopStart()
 {
-    if (!MK::METHOD_PROCESS_ID)
+    bool shouldFinish = false;
+
+    if(1)
     {
         std::lock_guard<std::mutex> lock(globalMutex1);
-        
-        MK::METHOD_PROCESS_ID = PA_NewProcess((void *)listenerLoop,
-                                               MK::MONITOR_PROCESS_STACK_SIZE,
-                                               MK::MONITOR_PROCESS_NAME);
+
+        if (!MK::METHOD_PROCESS_ID)
+        {
+            MK::METHOD_PROCESS_ID = PA_NewProcess((void *)listenerLoop,
+                                                   MK::MONITOR_PROCESS_STACK_SIZE,
+                                                   MK::MONITOR_PROCESS_NAME);
+        }
+        else
+        {
+            shouldFinish = true;
+        }
     }
-    else
+
+    if(shouldFinish)
     {
         listenerLoopFinish();
     }
-
 }
 
 void listenerLoopFinish()
@@ -715,7 +734,18 @@ void listenerLoopExecuteMethod()
         MK::MEDIA_KEY_CODES.erase(p);
     }
     
-    method_id_t methodId = PA_GetMethodID((PA_Unichar *)MK::WATCH_METHOD.getUTF16StringPtr());
+    C_TEXT watchMethod;
+    C_TEXT watchContext;
+
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(globalMutex2);
+
+        watchMethod.setUTF16String(MK::WATCH_METHOD.getUTF16StringPtr(), MK::WATCH_METHOD.getUTF16Length());
+        watchContext.setUTF16String(MK::WATCH_CONTEXT.getUTF16StringPtr(), MK::WATCH_CONTEXT.getUTF16Length());
+    }
+
+    method_id_t methodId = PA_GetMethodID((PA_Unichar *)watchMethod.getUTF16StringPtr());
     
     if(methodId)
     {
@@ -723,7 +753,7 @@ void listenerLoopExecuteMethod()
         params[0] = PA_CreateVariable(eVK_Longint);
         params[1] = PA_CreateVariable(eVK_Unistring);
         
-        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MK::WATCH_CONTEXT.getUTF16StringPtr());
+        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)watchContext.getUTF16StringPtr());
         
         PA_SetLongintVariable(&params[0], media_key);
         PA_SetStringVariable(&params[1], &context);
@@ -739,16 +769,16 @@ void listenerLoopExecuteMethod()
         params[1] = PA_CreateVariable(eVK_Unistring);
         params[2] = PA_CreateVariable(eVK_Unistring);
         
-        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)MK::WATCH_CONTEXT.getUTF16StringPtr());
+        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)watchContext.getUTF16StringPtr());
         
         PA_SetLongintVariable(&params[1], media_key);
         PA_SetStringVariable(&params[2], &context);
         
         params[0] = PA_CreateVariable(eVK_Unistring);
-        PA_Unistring method = PA_CreateUnistring((PA_Unichar *)MK::WATCH_METHOD.getUTF16StringPtr());
+        PA_Unistring method = PA_CreateUnistring((PA_Unichar *)watchMethod.getUTF16StringPtr());
         PA_SetStringVariable(&params[0], &method);
         
-        PA_ExecuteCommandByID(1007, params, 2);
+        PA_ExecuteCommandByID(1007, params, 3);
         
         PA_ClearVariable(&params[0]);
         PA_ClearVariable(&params[1]);
