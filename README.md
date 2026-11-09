@@ -2,6 +2,69 @@
 
 Captures OS-level media-key presses (volume, mute, play/pause, brightness, and similar keyboard keys not normally readable from 4D) and forwards them to a 4D project method. On macOS it uses a Cocoa `NSEvent` monitor (`addLocalMonitorForEventsMatchingMask:`/`addGlobalMonitorForEventsMatchingMask:`); on Windows it installs a `SetWindowsHookEx` hook (`WH_GETMESSAGE` or `WH_KEYBOARD_LL`). The plugin never consumes the event — whichever application the key was actually meant for still receives it as normal.
 
+## Manual version and publication workflows
+
+Run **Bump version** on the explicitly selected branch with `patch`, `minor`, or
+`major`. It validates strict source `X.Y.Z` and commits only the Xcode
+marketing/current-project versions, root Info.plist release fields and copied
+English localized release display values. Supported Xcode version references
+are preserved; absent CFBundleVersion remains absent. Prebuilt bundles,
+localization revision counters, dependencies, manifest and 4D/schema metadata
+are excluded. Bumping creates no tag and does not trigger Build.
+
+The existing authority is **1.0.3** (six MARKETING_VERSION settings and root
+CFBundleShortVersionString). The old bump header promised coordination with
+CURRENT_PROJECT_VERSION, but history from the first 1.0.1 bump (`f0ecb5e`)
+through 1.0.3 (`ddec223`) changed only marketing values. This migration repairs
+six stale 1.0.0 build settings and the Resources phase's English 1.2 short/info
+overrides to the existing 1.0.3, without a release increment. Copyright year,
+source encodings/permissions and independent metadata are retained.
+
+Bump checks a clean immutable selected checkout and the exact remote branch
+SHA before edits and again before push. Its mandatory executable pre-push
+guard checks receive-pack's advertised old SHA, exact target and new commit;
+late advance, rewind, deletion and same-result races fail closed. Missing or
+nonexecutable guards fail before edits. Push is nonforce, to only the selected
+branch, with both `push.followTags=false` and `--no-follow-tags`. If the branch
+moves, select its new state and dispatch again; nothing is force-updated.
+
+Run **Build** separately on the desired branch/commit. It has zero dispatch
+inputs; every checkout uses the selected immutable `github.sha`. It derives
+the version from source, retains Windows x64/MSBuild v143 and macOS universal
+builds, artifact merge, strict signature verification, ZIP/DMG notarization
+and DMG stapling. Assets remain `Media Key-X.Y.Z.zip` and
+`Media Key-X.Y.Z.dmg`. There is no new platform or default-branch-only gate.
+
+The Xcode target also retains its existing active legacy ShellScript phase
+(Developer ID signing and `altool` notarization using `@keychain:altool`).
+This migration does not bypass, modernize or execute that phase. Its legacy
+tool/credential requirements may still block a native Build independently of
+the workflow's later signing/notarytool gates; lifecycle checks do not claim
+native build success.
+
+Publication is serialized repository-wide across branches. Before native work
+and again after all build/sign/notary/staple gates, remote tags and authenticated
+paginated releases (including drafts) must be absent for `vX.Y.Z`. Every page
+and entry is validated; API 404/auth/network/malformed/later-page failures stop
+the run rather than being treated as absence. Publication creates a tag by
+POST at exactly the selected SHA (same-SHA creation races also fail), verifies
+its remote SHA, then separately POSTs a public non-prerelease with explicit
+tag/target/name and the original empty, non-generated notes policy. Asset POSTs
+target only that newly returned release ID.
+
+**Partial publication recovery:** there is no update, deletion, rollback,
+retry or asset clobber. If tag creation, release creation, verification or an
+upload fails, any accepted tag, release and assets remain. Inspect the error
+and remote state manually before deciding on recovery; do not rerun Build for
+an occupied version. A human must explicitly decide whether to finish the
+retained publication or prepare a new source version. Bump may likewise leave
+an unpushed local commit on failure; inspect it and redispatch at the current
+branch state.
+
+Local lifecycle checks (no native/signing execution):
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -q`
+and `actionlint .github/workflows/*.yml`.
+
 | Command | Returns | Purpose |
 |---|---|---|
 | [ON MEDIA KEY CALL](#on-media-key-call) | *(none)* | Registers (or stops) a project method that's called whenever a media key is pressed. |
