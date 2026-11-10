@@ -753,12 +753,11 @@ void listenerLoopExecuteMethod()
         params[0] = PA_CreateVariable(eVK_Longint);
         params[1] = PA_CreateVariable(eVK_Unistring);
         
-        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)watchContext.getUTF16StringPtr());
-        
         PA_SetLongintVariable(&params[0], media_key);
-        PA_SetStringVariable(&params[1], &context);
+        PA_SetUnistring(&params[1].uValue.fString, (PA_Unichar *)watchContext.getUTF16StringPtr());
         
-        PA_ExecuteMethodByID(methodId, params, 2);
+        PA_Variable result = PA_ExecuteMethodByID(methodId, params, 2);
+        PA_ClearVariable(&result);
         
         PA_ClearVariable(&params[0]);
         PA_ClearVariable(&params[1]);
@@ -766,17 +765,14 @@ void listenerLoopExecuteMethod()
     }else
     {
         PA_Variable    params[3];
-        params[1] = PA_CreateVariable(eVK_Unistring);
+        params[1] = PA_CreateVariable(eVK_Longint);
         params[2] = PA_CreateVariable(eVK_Unistring);
         
-        PA_Unistring context = PA_CreateUnistring((PA_Unichar *)watchContext.getUTF16StringPtr());
-        
         PA_SetLongintVariable(&params[1], media_key);
-        PA_SetStringVariable(&params[2], &context);
+        PA_SetUnistring(&params[2].uValue.fString, (PA_Unichar *)watchContext.getUTF16StringPtr());
         
         params[0] = PA_CreateVariable(eVK_Unistring);
-        PA_Unistring method = PA_CreateUnistring((PA_Unichar *)watchMethod.getUTF16StringPtr());
-        PA_SetStringVariable(&params[0], &method);
+        PA_SetUnistring(&params[0].uValue.fString, (PA_Unichar *)watchMethod.getUTF16StringPtr());
         
         PA_ExecuteCommandByID(1007, params, 3);
         
