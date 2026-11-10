@@ -120,25 +120,20 @@ void CPicture::fromFileAtPath(CUTF8String *pFilePath)
 	C_TEXT filePath;
 	filePath.setUTF8String(pFilePath);
 	
-	PA_Unistring _path = PA_CreateUnistring((PA_Unichar *)filePath.getUTF16StringPtr());
-	
 	PA_Variable args[2];
 	args[0] = PA_CreateVariable(eVK_Unistring);
-	PA_SetStringVariable(&args[0], &_path);
+	PA_SetUnistring(&args[0].uValue.fString, (PA_Unichar *)filePath.getUTF16StringPtr());
 	args[1] = PA_CreateVariable(eVK_Picture);
 	
 	PA_ExecuteCommandByID(678, args, 2);
 	
 	PA_Picture p = PA_GetPictureVariable(args[1]);
 	
-	PA_DisposeUnistring(&_path);
-	
 	PA_ClearVariable(&args[0]);
 	
 	setPicture(p);
 	
-//	PA_ClearVariable(&args[1]);	
-//	belongs to 4D? should not release
+	PA_ClearVariable(&args[1]);
 	
 }
 
@@ -246,20 +241,18 @@ PA_Picture CPicture::createCopy(const char* type)
                                               size,
                                               eVTC_UTF_16
                                               );    
-    CUTF16String u16 = CUTF16String((const PA_Unichar *)&buf[0], len);	
-    
-    PA_Unistring u = PA_CreateUnistring((PA_Unichar*)u16.c_str());
+    CUTF16String u16 = CUTF16String((const PA_Unichar *)&buf[0], len / sizeof(PA_Unichar));
     
     PA_Picture p;
     
     p = PA_DuplicatePicture(this->_CPicture, 1);
     
     PA_Variable args[2];
-    args[0] = PA_CreateVariable(eVK_Picture);
+    args[0] = PA_CreateVariable(eVK_Undefined);
     PA_SetPictureVariable(&args[0], p);
     args[1] = PA_CreateVariable(eVK_Unistring);
     
-    PA_SetStringVariable(&args[1], &u);
+    PA_SetUnistring(&args[1].uValue.fString, (PA_Unichar *)u16.c_str());
     PA_ExecuteCommandByID(CMU_CONVERT_PICTURE, args, 2);
     
     p = PA_GetPictureVariable(args[0]);

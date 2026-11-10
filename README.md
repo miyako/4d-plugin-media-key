@@ -2,6 +2,74 @@
 
 Captures OS-level media-key presses (volume, mute, play/pause, brightness, and similar keyboard keys not normally readable from 4D) and forwards them to a 4D project method. On macOS it uses a Cocoa `NSEvent` monitor (`addLocalMonitorForEventsMatchingMask:`/`addGlobalMonitorForEventsMatchingMask:`); on Windows it installs a `SetWindowsHookEx` hook (`WH_GETMESSAGE` or `WH_KEYBOARD_LL`). The plugin never consumes the event — whichever application the key was actually meant for still receives it as normal.
 
+## Native string ownership maintenance
+
+The audit baseline is `3e567ec31cff0f15aacea5411479676c13e11e75`.
+Both source and bundled manifests declare only `ON MEDIA KEY CALL(&T;&T;&L)`,
+dispatched as command 1. Inventory covered `4DPlugin.cpp`, all 16 first-party
+helper implementations and their headers, the bundled API implementation,
+and Xcode plus both Visual Studio projects. All helpers are compiled by those
+projects; no third-party library was changed.
+
+| Surface | Reachability and ownership conclusion |
+|---|---|
+| Command, listener, UUID and callbacks (`4DPlugin.cpp`) | Active. Input text is copied into C_TEXT snapshots. Synchronous callback text now uses PA_SetUnistring on its existing owner, avoiding allocated-empty descriptor overwrites. The fallback key is initialized as Longint. The direct method's owning return is cleared independently of its arguments. |
+| `C_TEXT` | Active. Native strings copy UTF-16 content; parameter/result setters use the engine content setter, not descriptor transfer. Platform conversion and Objective-C path utilities were inspected. |
+| `ARRAY_TEXT` | Compiled, not reached by the dispatcher. Borrowed array content is copied into native strings; each output element receives a separately created allocation. Accepted insertions transfer ownership and are not immediately disposed. No array fix was needed for successful allocation/resize paths. |
+| `C_PICTURE` / `CPicture` | Compiled, not reached by the dispatcher. The file-path argument now has one owner and one cleanup, rather than descriptor disposal plus variable cleanup. Conversion byte lengths are divided by sizeof(PA_Unichar) before constructing UTF-16 strings; the format argument updates its existing owner. The path result is retained before clearing its owning variable, and createCopy initializes its picture argument as Undefined before handing off an existing retained picture. |
+| `C_POINTER` | Compiled, not reached by the dispatcher. getVariable copies definition metadata from PA_GetPointerValue; clearing that value is deferred because metadata-versus-owning-value semantics are ambiguous despite the API's general cleanup comment. |
+| `C_BLOB`, `C_DATE`, `C_INTEGER`, `C_LONGINT`, `C_REAL`, `C_TIME`; `ARRAY_BOOLEAN`, `ARRAY_DATE`, `ARRAY_INTEGER`, `ARRAY_LONGINT`, `ARRAY_REAL`, `ARRAY_TIME` | Compiled, not reached by the dispatcher. Inspected scalar/array parameter and return helpers plus blob text conversion. No additional confirmed SDK string descriptor lifetime defect. |
+
+Contracts come from this repository's unchanged SDK, not a release inferred
+from its labels (header `v13`, implementation `v14`). SDK SHA-256:
+`4DPluginAPI.c`: `2721c3d4338cc2a350599ffcee2a8008abaa756acfd45dd710720c64ca8c8ce3`;
+`4DPluginAPI.h`: `7391841f0046f9e822b65ca6b07cafb3565aecfb58f65be4e0661adf97b8c786`.
+The canonical guidance used was
+[miyako/skills at merged PR 71](https://github.com/miyako/skills/blob/e6b492fcb81e5e1a7f7db723594b420e63bf6eb9/4d-skills/skills/4dplugin/SKILL.md).
+
+PA_CreateVariable(Unistring) creates an empty owned string;
+PA_SetStringVariable shallowly overwrites its descriptor. PA_SetUnistring
+updates content through EX_SET_UNISTRING instead. PA_GetStringInArray is
+borrowed; PA_SetStringInArray disposes the old element and transfers the
+incoming descriptor only for accepted type/data/index/non-null-input
+conditions (including index zero). PA_ExecuteMethodByID returns a separate
+variable, including when its content copies an input. EXECUTE METHOD (1007)
+and the picture commands used here are procedures, not owning function
+results. This SDK has no object/collection property helper surfaces.
+
+Run `python3 .github/tests/run_ownership.py` on macOS with Apple clang and
+the system SDK. It compiles actual `4DPlugin.cpp`, all helpers and the full
+unchanged bundled API against an EngineBlock callback shim, with ASan/UBSan.
+No Xcode build phase, signing, packaging, notarization or publication runs.
+The Native ownership workflow runs the same harness and existing lifecycle
+tests on pull requests and relevant master changes.
+
+The six harness cases cover callback arguments and independent/copied-input
+returns, method/command handle allocation failure and host error cleanup,
+picture path replacement/retention, exact ASCII/BMP/surrogate-pair/empty
+format content, byte capacities and termination, borrowed array copies,
+independent transfers, replacement/shrink/clear, and rejected type/index/
+null-data/null-input assignments. Both allocated and null empty string
+representations are exercised. SDK string/handle allocations and picture
+references are counted because LeakSanitizer is not used on macOS.
+
+To compare an immutable checkout, pass `--source-root /path/to/checkout`;
+the current harness is still used with that checkout's complete sources and
+SDK. At the baseline above, callbacks, callback-results and callback-errors
+fail allocation accounting, path fails double-disposal accounting, and
+conversion fails ASan with a heap-buffer-overflow at C_PICTURE.cpp:249;
+arrays pass unchanged. Fixed sources pass all six cases (320 normal
+callbacks, four host-error callbacks, four rejected handle allocations,
+80 path loads and 80 conversions) and the existing 45 lifecycle tests.
+
+This is host-shim evidence on macOS arm64, not certification in 4D or on
+Windows. OS hooks, asynchronous cancellation/process abort, allocation
+failure inside string creation or array resize, and nonempty picture
+representation enumeration are not simulated. PA_GetPictureData's returned
+type-string lifetime needs host evidence before cleanup changes. Unrelated
+queue iterator/reentrancy and picture-only helper ownership paths are not
+redesigned by this string audit. Tracked prebuilt binaries remain unchanged.
+
 ## Manual version and publication workflows
 
 Run **Bump version** on the explicitly selected branch with `patch`, `minor`, or
